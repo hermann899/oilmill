@@ -1,0 +1,514 @@
+<!DOCTYPE html><html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>Agrarservice Oilmill – Heute im Einsatz</title>
+  <link rel="preconnect" href="https://unpkg.com">
+  <link rel="preconnect" href="https://{s}.tile.openstreetmap.org">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <style>
+    :root{
+      --bg:#0b120d;
+      --panel:#152118;
+      --panel2:#1b2a1f;
+      --line:rgba(255,255,255,.08);
+      --text:#eef4ea;
+      --muted:#bac7b6;
+      --green:#6f9d53;
+      --green2:#89bf68;
+      --brown:#a16e48;
+      --brown2:#c0865b;
+      --gold:#d9bd74;
+      --shadow:0 18px 55px rgba(0,0,0,.32);
+      --radius:28px;
+      --radius2:18px;
+    }
+    *{box-sizing:border-box}
+    html,body{margin:0;padding:0;background:
+      radial-gradient(circle at top left, rgba(111,157,83,.20), transparent 24%),
+      radial-gradient(circle at 85% 8%, rgba(193,134,91,.18), transparent 20%),
+      linear-gradient(180deg,#081009 0%, #101a13 45%, #090e0a 100%);
+      color:var(--text);
+      font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+      -webkit-font-smoothing:antialiased;
+      text-rendering:optimizeLegibility;
+    }
+    body::before{content:"";position:fixed;inset:0;pointer-events:none;background-image:linear-gradient(rgba(255,255,255,.018) 1px, transparent 1px),linear-gradient(90deg, rgba(255,255,255,.018) 1px, transparent 1px);background-size:42px 42px;opacity:.35;mask-image:linear-gradient(180deg, rgba(0,0,0,.96), rgba(0,0,0,.08));}
+    .wrap{width:min(1200px, calc(100vw - 16px));margin:0 auto;padding:8px 0 22px;}
+    .card{background:linear-gradient(180deg, rgba(18,28,20,.98), rgba(11,17,12,.98));border:1px solid var(--line);box-shadow:var(--shadow);}
+    .hero{border-radius:30px;overflow:hidden;padding:16px 14px 14px;margin-top:4px;background:
+      linear-gradient(135deg, rgba(20,32,22,.98), rgba(18,28,20,.72)),
+      radial-gradient(circle at 18% 15%, rgba(111,157,83,.24), transparent 24%),
+      radial-gradient(circle at 88% 10%, rgba(193,134,91,.18), transparent 22%);
+    }
+    .brand{display:flex;gap:14px;align-items:flex-start}
+    .logo{width:72px;height:72px;flex:none;border-radius:22px;display:grid;place-items:center;background:linear-gradient(145deg, rgba(111,157,83,.18), rgba(193,134,91,.14));border:1px solid rgba(255,255,255,.08);box-shadow:inset 0 1px 0 rgba(255,255,255,.06)}
+    .eyebrow{display:inline-flex;align-items:center;gap:8px;text-transform:uppercase;letter-spacing:.15em;font-size:.74rem;color:#dbe5d7;margin:2px 0 8px}
+    .eyebrow .dot{width:9px;height:9px;border-radius:999px;background:linear-gradient(180deg, var(--green2), var(--brown2));box-shadow:0 0 0 6px rgba(137,191,104,.12)}
+    h1{margin:0;font-size:clamp(1.9rem,8vw,3.6rem);line-height:.98;letter-spacing:-.04em}
+    .sub{margin:11px 0 0;color:var(--muted);line-height:1.62;font-size:1rem;max-width:68ch}
+    .chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+    .chip{padding:9px 12px;border-radius:999px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);color:#edf3ea;font-size:.86rem}
+    .hero-grid{display:grid;grid-template-columns:1fr;gap:14px}
+    .summary{border-radius:24px;overflow:hidden;padding:14px;background:linear-gradient(180deg, rgba(28,41,30,.98), rgba(12,18,13,.98));border:1px solid rgba(255,255,255,.07)}
+    .summary-title{font-size:.78rem;letter-spacing:.15em;text-transform:uppercase;color:#cfd9cb;margin-bottom:10px}
+    .summary-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+    .metric{padding:12px;border-radius:16px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.07)}
+    .metric strong{display:block;font-size:1.35rem;line-height:1}
+    .metric span{display:block;margin-top:4px;color:var(--muted);font-size:.8rem}
+    .summary-note{margin-top:9px;color:var(--muted);line-height:1.5;font-size:.9rem}
+    .photo-strip{display:grid;grid-template-columns:1fr;gap:10px}
+    .photo{position:relative;min-height:130px;border-radius:22px;overflow:hidden;border:1px solid rgba(255,255,255,.08);background:linear-gradient(145deg, rgba(111,157,83,.24), rgba(193,134,91,.18));box-shadow:inset 0 -30px 40px rgba(0,0,0,.25)}
+    .photo img{width:100%;height:100%;object-fit:cover;display:block;filter:saturate(1.08) contrast(1.03)}
+    .photo::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg, transparent 0 46%, rgba(0,0,0,.2) 100%)}
+    .photo span{position:absolute;left:12px;right:12px;bottom:10px;z-index:1;font-weight:800;text-shadow:0 2px 10px rgba(0,0,0,.5)}
+    .photo i{position:absolute;top:10px;right:10px;z-index:1;font-style:normal;font-size:.78rem;background:rgba(8,12,9,.38);border:1px solid rgba(255,255,255,.08);padding:5px 9px;border-radius:999px}
+    .toolbar{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;flex-wrap:wrap;margin:14px 2px 12px}
+    .section-title h2{margin:0;font-size:clamp(1.35rem,4.8vw,2rem)}
+    .section-title p{margin:4px 0 0;color:var(--muted);font-size:.95rem;line-height:1.45}
+    .layout{display:grid;grid-template-columns:1fr;gap:14px}
+    .main,.side-card{border-radius:28px;overflow:hidden}
+    .main{padding:12px}
+    .main-head{display:flex;justify-content:space-between;align-items:flex-end;gap:10px;margin:0 2px 12px;flex-wrap:wrap}
+    .main-head .hint{color:var(--muted);font-size:.9rem;line-height:1.45}
+    .cards{display:grid;grid-template-columns:1fr;gap:12px}
+    .work-card{border-radius:22px;padding:14px;background:
+      radial-gradient(circle at 94% 8%, rgba(193,134,91,.12), transparent 18%),
+      radial-gradient(circle at 0% 0%, rgba(111,157,83,.16), transparent 22%),
+      rgba(255,255,255,.035);
+      border:1px solid rgba(255,255,255,.07);display:grid;gap:12px}
+    .topline{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+    .customer{font-size:1.02rem;font-weight:900;line-height:1.18}
+    .location{margin-top:3px;color:var(--muted);font-size:.9rem;line-height:1.45}
+    .badge{display:inline-flex;align-items:center;gap:6px;white-space:nowrap;padding:7px 10px;border-radius:999px;background:rgba(111,157,83,.14);border:1px solid rgba(137,191,104,.16);color:#e2f0d7;font-size:.77rem;flex:none}
+    .badge.brown{background:rgba(193,134,91,.14);border-color:rgba(193,134,91,.16);color:#f2e1d4}
+    .job{font-size:1.06rem;font-weight:900;line-height:1.36;margin:0}
+    .meta{display:grid;gap:8px}
+    .row{display:grid;grid-template-columns:130px 1fr;gap:8px}
+    .k{color:#c7d2c3;font-size:.85rem}
+    .v{font-weight:650;line-height:1.45}
+    .machines{display:flex;flex-wrap:wrap;gap:7px}
+    .machine{padding:7px 9px;border-radius:999px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.07);font-size:.8rem}
+    .map-wrap{border-radius:18px;overflow:hidden;border:1px solid rgba(255,255,255,.08);background:linear-gradient(180deg, rgba(27,41,29,.96), rgba(12,17,13,.96))}
+    .map-caption{padding:9px 11px;border-bottom:1px solid rgba(255,255,255,.07);display:flex;justify-content:space-between;gap:10px;align-items:center;background:rgba(255,255,255,.03);font-size:.84rem;color:#d8e2d4}
+    .map-caption strong{font-size:.92rem}
+    .mini-map{height:180px;width:100%}
+    .side-stack{display:grid;gap:14px}
+    .side-card{padding:14px}
+    .side-card h3{margin:0 0 10px;font-size:1.1rem}
+    .small{color:var(--muted);line-height:1.55;font-size:.92rem}
+    .legend-item{display:flex;gap:12px;align-items:flex-start;padding:11px 12px;border-radius:18px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);margin-top:10px}
+    .swatch{width:18px;height:18px;border-radius:999px;flex:none;margin-top:3px;background:linear-gradient(180deg,var(--green2),var(--brown2));box-shadow:0 0 0 6px rgba(137,191,104,.09)}
+    .legend-item strong{display:block;margin-bottom:2px}
+    .legend-item span{color:var(--muted);font-size:.91rem;line-height:1.45}
+    .highlights{display:grid;grid-template-columns:1fr;gap:10px}
+    .highlight{padding:12px;border-radius:18px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07)}
+    .highlight strong{display:block;margin-bottom:4px}
+    .highlight span{color:var(--muted);font-size:.91rem;line-height:1.45}
+    .map-overview .mini-map{height:240px}
+    .footer{margin-top:14px;padding:8px 6px 0;color:var(--muted);display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;font-size:.9rem}
+    .leaflet-container{background:#101913}
+    .marker{width:18px;height:18px;border-radius:999px;border:2px solid #fff;box-shadow:0 0 0 6px rgba(0,0,0,.08)}
+    .marker.customer{background:#6f9d53}
+    .marker.work{background:#d9bd74}
+    .marker.big{width:22px;height:22px}
+    @media (min-width: 820px){
+      .wrap{width:min(1400px, calc(100vw - 20px));}
+      .hero{padding:22px}
+      .hero-grid{grid-template-columns:1.15fr .85fr;gap:18px}
+      .photo-strip{grid-template-columns:repeat(3,1fr)}
+      .layout{grid-template-columns:repeat(12,1fr)}
+      .main{grid-column:1 / span 8}
+      .side{grid-column:9 / span 4}
+      .cards{grid-template-columns:repeat(2,1fr)}
+    }
+    @media (min-width: 1040px){
+      .highlights{grid-template-columns:repeat(3,1fr)}
+    }
+    @media (max-width: 520px){
+      .wrap{width:min(100vw - 12px, 1400px)}
+      .hero,.main,.side-card{border-radius:24px}
+      .row{grid-template-columns:1fr;gap:3px}
+      h1{font-size:2rem}
+      .logo{width:66px;height:66px}
+      .summary-grid{grid-template-columns:1fr;gap:8px}
+      .metric strong{font-size:1.45rem}
+      .mini-map,.map-overview .mini-map{height:220px}
+    }
+    @media print{body{background:#fff;color:#000}.hero,.main,.side-card,.work-card{box-shadow:none !important}.footer{display:none}.layout,.hero-grid,.cards{display:block}.side{margin-top:12px}}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <section class="hero card">
+      <div class="hero-grid">
+        <div>
+          <div class="brand">
+            <div class="logo" aria-hidden="true">
+              <svg viewBox="0 0 100 100" width="56" height="56" role="img" aria-label="Logo Agrarservice Oilmill">
+                <defs>
+                  <linearGradient id="lg" x1="0" x2="1" y1="0" y2="1">
+                    <stop offset="0%" stop-color="#89bf68"/>
+                    <stop offset="100%" stop-color="#c0865b"/>
+                  </linearGradient>
+                </defs>
+                <circle cx="50" cy="50" r="45" fill="rgba(255,255,255,.03)" stroke="url(#lg)" stroke-width="3"/>
+                <path d="M16 67 C31 55, 46 50, 84 35" stroke="#e6eee2" stroke-width="6" stroke-linecap="round" fill="none" opacity=".9"/>
+                <path d="M25 73 Q40 46 70 30" stroke="#89bf68" stroke-width="5" stroke-linecap="round" fill="none"/>
+                <path d="M33 73 q4-16 13-28" stroke="#c0865b" stroke-width="5" stroke-linecap="round" fill="none"/>
+                <circle cx="45" cy="62" r="11" fill="#0b120d" stroke="#d9bd74" stroke-width="4"/>
+                <circle cx="45" cy="62" r="4" fill="#d9bd74"/>
+              </svg>
+            </div>
+            <div>
+              <div class="eyebrow"><span class="dot"></span>Agrarservice Oilmill • Heute im Einsatz</div>
+              <h1>Stark auf dem Feld. Klar auf dem Handy.</h1>
+              <p class="sub">Die Seite zeigt nur Arbeiten, die am selben Tag erledigt werden. Jede Tour läuft nur wenige Stunden, wird live gespeichert und ersetzt sich automatisch, sobald sie fertig ist. So bleibt die öffentliche Übersicht immer frisch und realistisch.</p>
+              <div class="chips">
+                <span class="chip">Tagesarbeiten statt Dauereinsätze</span>
+                <span class="chip">Mobil optimiert</span>
+                <span class="chip">Echte Karte mit Markern</span>
+                <span class="chip">Live-Verfügbarkeit</span>
+                <span class="chip">Automatisch gespeichert</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="hero-right">
+          <div class="summary">
+            <div class="summary-title">Heutiger Überblick</div>
+            <div class="summary-grid" id="summaryGrid"></div>
+            <div class="summary-note" id="summaryNote"></div>
+          </div>
+          <div class="photo-strip">
+            <div class="photo">
+              <img src="https://source.unsplash.com/1200x900/?tractor,field" alt="Landmaschine auf dem Feld" />
+              <i>Foto</i><span>Feldarbeit & Zugkraft</span>
+            </div>
+            <div class="photo">
+              <img src="https://source.unsplash.com/1200x900/?harvester,agriculture" alt="Erntemaschine" />
+              <i>Foto</i><span>Ernte & Logistik</span>
+            </div>
+            <div class="photo">
+              <img src="https://source.unsplash.com/1200x900/?farm,machinery" alt="Hoftechnik" />
+              <i>Foto</i><span>Hof & Pflege</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section><div class="toolbar">
+  <div class="section-title">
+    <h2>Hier sind wir aktiv</h2>
+    <p>Fünf aktuelle Arbeiten, kurze Laufzeiten, echte Karten und passende Maschinen.</p>
+  </div>
+</div>
+
+<section class="layout">
+  <div class="card main">
+    <div class="main-head">
+      <div>
+        <div style="font-weight:900;font-size:1.08rem">Aktive Arbeiten</div>
+        <div class="hint" id="liveHint">Die Liste wird automatisch erneuert, wenn eine Arbeit abgeschlossen ist.</div>
+      </div>
+      <div class="hint" id="monthHint"></div>
+    </div>
+    <div class="cards" id="cards"></div>
+  </div>
+
+  <aside class="side side-stack">
+    <div class="card side-card">
+      <h3>Warum die Seite interessant ist</h3>
+      <div class="highlights">
+        <div class="highlight"><strong>Live-Tagesmodus</strong><span>Jeder Einsatz startet und endet am selben Tag. Abgelaufene Einträge werden ohne manuelles Zutun ersetzt.</span></div>
+        <div class="highlight"><strong>Technik sichtbar gemacht</strong><span>Zu jeder Arbeit erscheinen passende Maschinen aus dem Fuhrpark mit realistischem Einsatzbezug.</span></div>
+        <div class="highlight"><strong>Regionale Nähe</strong><span>Karte, Kundenort und Einsatzpunkt liegen eng beieinander, damit man sofort erkennt, wo gearbeitet wird.</span></div>
+      </div>
+    </div>
+
+    <div class="card side-card legend-card">
+      <h3>Maschinenlogik</h3>
+      <div class="legend-item">
+        <div class="swatch"></div>
+        <div><strong>Bodenbearbeitung</strong><span>Schwere Traktoren, Grubber, Pflüge und Saatbetttechnik für Stoppelsturz, Pflügen und Vorbereitung.</span></div>
+      </div>
+      <div class="legend-item">
+        <div class="swatch"></div>
+        <div><strong>Aussaat & Pflege</strong><span>Präzisionsdrillen, Einzelkornsätechnik, Düngung und Pflanzenschutz mit spurtreuen Maschinen.</span></div>
+      </div>
+      <div class="legend-item">
+        <div class="swatch"></div>
+        <div><strong>Ernte & Transport</strong><span>Mähdrescher, Häcksler, Roder und Transporteinheiten für die kurzen Erntefenster.</span></div>
+      </div>
+    </div>
+
+    <div class="card side-card map-overview">
+      <h3>Regionale Übersicht</h3>
+      <div class="small">Alle heutigen Einsatzorte auf einer echten Karte im Überblick.</div>
+      <div style="height:10px"></div>
+      <div class="map-wrap">
+        <div class="map-caption">
+          <strong>Aktive Standorte</strong>
+          <span>heute</span>
+        </div>
+        <div class="mini-map" id="overviewMap"></div>
+      </div>
+    </div>
+  </aside>
+</section>
+
+<div class="footer">
+  <div>© Agrarservice Oilmill • mobile Live-Einsatzseite</div>
+  <div id="footerDate"></div>
+</div>
+
+  </div>  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>  <script>
+    const customers = [
+      { name:'Agrarservice Busse & Bösche', type:'Lohnunternehmen / Agrarservice', location:'Hankensbüttel', lat:52.73, lon:10.60 },
+      { name:'Geflügelhof Hörning', type:'Landwirtschaftlicher Betrieb / Geflügelhaltung', location:'Höfen (LK Gifhorn)', lat:52.57, lon:10.55 },
+      { name:'Hühnerhof Bührke', type:'Landwirtschaftlicher Betrieb / Hofladen', location:'Hagen (LK Gifhorn)', lat:52.60, lon:10.58 },
+      { name:'Hof Heuer', type:'Landwirtschaftlicher Familienbetrieb', location:'Bokelberge bei Müden', lat:52.53, lon:10.36 },
+      { name:'Müllers Hofladen / Hof Müller GbR', type:'Hofladen / Direktvermarktung', location:'Boitzenhagen bei Wittingen', lat:52.74, lon:10.80 },
+      { name:'Hofladen Armbrecht', type:'Hofladen / Direktvermarktung', location:'Leiferde', lat:52.43, lon:10.50 },
+      { name:'Biohof Wegner', type:'Biohof / Direktvermarktung', location:'Bergfeld', lat:52.52, lon:10.80 },
+      { name:'Mühlenhof Volk', type:'Landwirtschaftlicher Betrieb / Direktvermarktung', location:'Weyhausen', lat:52.43, lon:10.73 },
+      { name:'Spargelhof Kuhls', type:'Landwirtschaftlicher Betrieb / Direktvermarktung', location:'Gifhorn-Neubokel', lat:52.50, lon:10.55 },
+      { name:'Müllers Bauernhof', type:'Hofladen / Direktvermarktung', location:'Isenbüttel', lat:52.43, lon:10.58 },
+      { name:'Graf von der Schulenburg', type:'Landwirtschaftlicher Betrieb', location:'Wolfsburg', lat:52.42, lon:10.78 },
+      { name:'Hof Welkensiek', type:'Biolandbetrieb / Direktvermarktung', location:'Wolfsburg-Heiligendorf', lat:52.39, lon:10.76 },
+      { name:'Hof am Drömling', type:'Landwirtschaftlicher Betrieb / Hofladen', location:'Wolfsburg-Wendschott', lat:52.46, lon:10.80 },
+      { name:'Hof Töpperwien', type:'Landwirtschaftlicher Betrieb / Direktvermarktung', location:'Wolfsburg-Heiligendorf', lat:52.39, lon:10.76 },
+      { name:'Papes Gemüsegarten', type:'Hofladen / Gemüsebau', location:'Wolfsburg-Steimker Gärten / Ehmen', lat:52.40, lon:10.71 },
+      { name:'Agrarservice Eickhorst', type:'Lohnunternehmen / Agrarservice', location:'bei Braunschweig', lat:52.27, lon:10.52 },
+      { name:'Lindenhof Eilum', type:'Landwirtschaftlicher Betrieb / Gemüsegärtnerei', location:'bei Braunschweig', lat:52.28, lon:10.42 },
+      { name:'Rantze Agrarservice', type:'Lohnunternehmen / Landwirtschaft', location:'Langlingen', lat:52.56, lon:10.29 },
+      { name:'Cramm Lohnunternehmen', type:'Lohnunternehmen', location:'Hohne', lat:52.62, lon:10.37 },
+      { name:'Lohnunternehmen Linneweh', type:'Lohnunternehmen', location:'Celle-Altencelle', lat:52.61, lon:10.09 },
+      { name:'Kuhbetrieb Kläke', type:'Landwirtschaftlicher Betrieb / Hofladen', location:'Celle-Bennebostel', lat:52.66, lon:10.08 },
+      { name:'Hof Knoop', type:'Biolandbetrieb', location:'Altencelle', lat:52.61, lon:10.08 },
+      { name:'Haberländer Wiesenrind GbR', type:'Mutterkuhbetrieb / Landwirtschaft', location:'Landkreis Celle', lat:52.63, lon:10.11 },
+      { name:'Georg Franz GmbH', type:'Lohnunternehmen', location:'Redderse bei Wennigsen', lat:52.30, lon:9.59 },
+      { name:'ASR Transporte & Lohnunternehmen', type:'Lohnunternehmen / Agrartransporte', location:'Ronnenberg', lat:52.32, lon:9.65 },
+      { name:'Hof Schnepel', type:'Landwirtschaftlicher Betrieb', location:'Wunstorf', lat:52.43, lon:9.44 },
+      { name:'Meyer\'s Hof', type:'Landwirtschaftlicher Betrieb / Direktvermarktung', location:'Wassel bei Sehnde', lat:52.31, lon:9.95 },
+      { name:'Biohof Peters', type:'Biolandbetrieb / Hofladen', location:'Wunstorf-Großenheidorn', lat:52.46, lon:9.38 },
+      { name:'Biohof Rotermund-Hemme', type:'Biolandbetrieb / Direktvermarktung', location:'Wedemark-Brelingen', lat:52.55, lon:9.74 },
+      { name:'Eschenhof', type:'Biolandbetrieb / Hofladen', location:'Springe', lat:52.21, lon:9.55 },
+      { name:'Gut Adolphshof', type:'Biodynamischer Hof', location:'Hämelerwald bei Lehrte', lat:52.34, lon:10.05 },
+      { name:'Bauer Ludwig', type:'Erlebnisbauernhof / Gemüsebetrieb', location:'Gehrden', lat:52.31, lon:9.60 },
+      { name:'Ebbecke Lohnunternehmen', type:'Lohnunternehmen', location:'Garbsen', lat:52.43, lon:9.60 }
+    ];
+
+    const monthTasks = {
+      1:['Maschinen warten und lackieren','Ersatzteile liefern','Planung eines Feldversuchs','Anbau- und Düngeplanung für das Jahr abschließen','Verträge mit Abnehmern verhandeln','Gräben und Drainagen reinigen','Hecken auf den Stock setzen','Holz im Wald einschlagen','Eisaufbruch an Tränken durchführen','Fortbildung','Tierbestandskontrolle','Winterdienst auf Hof und Wirtschaftswegen'],
+      2:['Zäune und Weidetore kontrollieren und reparieren','erste Stickstoffdüngung auf Grünland und Wintergetreide','Obstbaumschnitt abschließen','Bodenproben entnehmen','Pflanzenschutzspritze warten','Kartoffeln umtanken','Saatbettbereitung auf leichten Böden','Holz häckseln','Mist auf gefrorenen Böden streuen','Spätfrostschutz im Obstbau vorbereiten'],
+      3:['Gülle und Mist ausbringen','Sommergerste und Hafer säen','Zuckerrüben säen','Erbsen und Ackerbohnen drillen','Wiesen schleppen und walzen','Frühkartoffeln unter Folie legen','Unkrautbekämpfung im Wintergetreide','Untersaaten anlegen','Stallmistkompost umsetzen','Frostschäden des Winters bonitieren','Drainagen spülen','erste flache Bodenbearbeitung (Striegeln)'],
+      4:['Mais säen','Speise- und Wirtschaftskartoffeln legen','Zwiebeln und Möhren säen','Grünland nachsäen und düngen','Wintergetreide die zweite Stickstoffgabe geben','Raps auf Schädlingsbefall kontrollieren und spritzen','Wachstumsregler im Getreide ausbringen','Spargelernte beginnen','Zwischenfruchtbestände umbrechen','Leguminosen striegeln'],
+      5:['Erster Grasschnitt für Silage','Silomais im Nachauflauf spritzen','Rüben maschinell hacken','Getreide gegen Pilzkrankheiten behandeln','Rapsblütenbehandlung durchführen','Weideauftrieb für das Vieh','Beregnungsanlagen aufbauen und starten','Erdbeerernte beginnen','mechanische Unkrautbekämpfung in Reihenkulturen'],
+      6:['Kartoffeln gegen Krautfäule spritzen','Mais nachdüngen','Heu machen und einfahren','zweite Silage-Ernte auf dem Grünland','Beregnung von Frühkartoffeln und Gemüse','Getreidehähnchen-Behandlung im Getreide','Heckenrückschnitt an unübersichtlichen Kreuzungen','Fliegenbekämpfung im Stall','Beginn der Wintergerstenernte','Kirschenernte'],
+      7:['Wintergerste dreschen','Raps ernten','Beginn der Winterweizenernte','Ganzpflanzensilage häckseln','Erbsen und Bohnen dreschen','Stroh pressen und abfahren','Lagerhäuser und Silos für das neue Getreide reinigen','Mähdrescher täglich warten und ausblasen','erste Stoppelbearbeitung mit Grubber und Scheibenegge','Zwischenfrüchte einsäen','intensive Beregnung von Zuckerrüben und Mais'],
+      8:['Winterweizen- und Roggenernte abschließen','Sommergetreide dreschen','Körnerleguminosen ernten','Strohbergung beenden','Strohmieten abdecken','Silos beschweren','tiefe Bodenbearbeitung zur Saatbettbereitung','Aussaat von Winterraps','Ausfallraps bekämpfen','Zwischenfrüchte großflächig drillen','Wirtschaftsdünger auf Getreidestoppeln ausbringen'],
+      9:['Silomais ernten und festfahren','Haupternte der Kartoffeln','Aussaat von Wintergerste','Bodenbearbeitung für nachfolgende Winterungen','Bodenherbizide im Wintergetreide ausbringen','Schneckenkorn im jungen Raps streuen','Kartoffelkraut vor der Ernte schlagen','Grünlandpflege und dritter/vierter Grasschnitt','Äpfel und Birnen ernten','Hopfen- und Weinlese'],
+      10:['Zuckerrüben roden','Körnermais ernten und dreschen','Aussaat von Winterweizen, Winterroggen und Triticale','Kartoffeln einlagern und Hallen belüften','Rübenmieten am Feldrand anlegen','letzte Gülleausbringung vor der Sperrfrist','herbstliche Bodenbearbeitung','Mäusebekämpfung auf dem Acker','Stallungen winterfest machen'],
+      11:['Rübenabfuhr zur Zuckerfabrik','Rübenmieten bei Frostgefahr mit Vlies abdecken','Wintergetreide auf Feldaufgang kontrollieren','Maschinen gründlich reinigen und einwintern','Ackerrandstreifen pflegen','Kalk ausbringen','Bodenproben für die Düngeplanung des Folgejahres ziehen','Güllebehälter auf freie Kapazitäten prüfen','Pachtzahlungen anweisen'],
+      12:['Agrardiesellieferung','Jahresabschlussverhandlungen','Betriebsprämienbescheide prüfen','Jahresplanung für Saatgut und Pflanzenschutz erstellen','Investitionsplanung','Inventur von Dünger- und Pflanzenschutzresten','Winterreparaturen in der Werkstatt durchführen','Tiere im Stall betreuen','Holzrücken im Wald','Winterdienst']
+    };
+
+    const machineSets={
+      soil:['Fendt 942 Vario','John Deere 8R 410','Claas Xerion 5000','Case IH Magnum 340','Horsch Terrano','Lemken Rubin','Amazone Centaur','Väderstad Carrier','Lemken Diamant','Pöttinger Servo','Lemken System-Kompaktor'],
+      sowing:['Fendt 728 Vario','John Deere 6R 250','Claas Axion 830','Horsch Pronto DC','Amazone Cayena','Lemken Solitair','Väderstad Tempo','Amazone Precea','Grimme GL 430','Grimme Prios 440'],
+      cropCare:['Fendt 516 Vario','John Deere 6M 155','Valtra N175','Amazone Pantera','Horsch Leeb LT','Lemken Sirius','Amazone ZA-V','Rauch Axis','Holmer Terra Variant','Zunhammer Güllewagen','Samson Güllewagen','Bergmann Universalstreuer','Tebbe HS'],
+      forage:['Claas Arion 660','Steyr Terrus CVT','Krone EasyCut','Claas Disco','Pöttinger Novacat','Krone KW','Kuhn GA','Pöttinger Jumbo','Krone ZX','Krone Comprima','Claas Quadrant'],
+      harvest:['Claas Lexion 8900','John Deere X9','New Holland CR 10.90','Horsch Titan','Fliegl ULW','Claas Jaguar 980','Krone BiG X 1180','John Deere 9000er Serie','Grimme Varitron 470','Grimme SE 260','ROPA Tiger 6S','Holmer Terra Dos T4'],
+      transport:['JCB Fastrac 4220','Fendt 728 Vario','Mercedes-Benz Arocs Agrar','MAN TGS Agrar-Truck','Fliegl Abschiebewagen','Krampe Halfpipe','Brantner Zweiseitenkipper'],
+      yard:['Fendt 314 Vario','Massey Ferguson 5S','Kramer KT407','Manitou MLT','Weidemann Hoftrac','JCB Loadall','Pfanzelt Seilwinde','Kuhn Böschungsmäher','Dücker Kehrmaschine']
+    };
+
+    const rules=[
+      { test:/sä|säen|drill|legen|aussaat|saatbett|kartoffel/i, set:'sowing', badge:'Aussaat / Pflanzen', team:[2,4], dur:[120,240] },
+      { test:/gülle|mist|düng|pflug|bodenbearbeitung|striegel|walzen|schleppen|grubber|scheibenegge|winterfurche|kalk|bodenprobe/i, set:'soil', badge:'Boden / Düngung', team:[2,5], dur:[120,240] },
+      { test:/mäh|silage|heu|grasschnitt|beregn|weide|wender|schwader|ladewagen|futter/i, set:'forage', badge:'Grünland / Futter', team:[2,5], dur:[90,220] },
+      { test:/dresch|ernte|roden|häcksel|press|abfahren|einfahren|überlad|silo|lager|rübe|mais|kartoffel|getreide/i, set:'harvest', badge:'Ernte / Logistik', team:[3,6], dur:[150,260] },
+      { test:/transport|abfuhr|lkw|anhänger|silo|fabrik/i, set:'transport', badge:'Transport', team:[2,4], dur:[70,160] },
+      { test:/hecke|holz|winterdienst|repar|reinigen|prüfen|pflege|stall|schmieren|werkstatt|inventur|buchhaltung|steuer|planung/i, set:'yard', badge:'Hof / Pflege', team:[1,3], dur:[60,140] }
+    ];
+
+    const pad=n=>String(n).padStart(2,'0');
+    const monthNames=['Januar','Februar','März','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'];
+
+    function hashString(str){let h=2166136261;for(let i=0;i<str.length;i++){h^=str.charCodeAt(i);h=Math.imul(h,16777619)}return Math.abs(h)}
+    function rng(seed){let s=seed%2147483647;if(s<=0)s+=2147483646;return()=>((s=s*16807%2147483647)/2147483647)}
+    function shuffle(arr,r){const a=[...arr];for(let i=a.length-1;i>0;i--){const j=Math.floor(r()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+    function pick(arr,r){return arr[Math.floor(r()*arr.length)]}
+    function minutesText(mins){const m=Math.max(0,Math.round(mins));const h=Math.floor(m/60),r=m%60;if(h===0)return `${r} Min.`;if(r===0)return `${h} Std.`;return `${h} Std. ${r} Min.`}
+    function formatDateTime(d){return new Intl.DateTimeFormat('de-DE',{weekday:'long',day:'numeric',month:'long',year:'numeric',hour:'2-digit',minute:'2-digit'}).format(d)}
+    function fmtTime(d){return new Intl.DateTimeFormat('de-DE',{hour:'2-digit',minute:'2-digit'}).format(d)}
+    function safeGet(key){try{return localStorage.getItem(key)}catch(e){return null}}
+    function safeSet(key,val){try{localStorage.setItem(key,val)}catch(e){}}
+    function safeRemove(key){try{localStorage.removeItem(key)}catch(e){}}
+    function monthKey(date){return `oilmill-today-${date.getFullYear()}-${pad(date.getMonth()+1)}-${pad(date.getDate())}`}
+    function taskRule(task){return rules.find(r=>r.test.test(task))||rules[0]}
+    function machinePoolFor(set){return machineSets[set]||machineSets.yard}
+    function offsetCoord(lat,lon,r){return {lat:lat+(r()-0.5)*0.02,lon:lon+(r()-0.5)*0.03}}
+    function durationFor(rule,r){return Math.round((rule.dur[0]+r()*(rule.dur[1]-rule.dur[0]))/10)*10}
+    function customerNear(cityName, lat, lon){
+      const nearby = customers.filter(c => c.location.includes(cityName) || Math.hypot(c.lat-lat, c.lon-lon) < 0.12);
+      return nearby.length ? nearby : customers;
+    }
+
+    function generateDayPlan(){
+      const now = new Date();
+      const key = monthKey(now);
+      const raw = safeGet(key);
+      const monthIndex = now.getMonth()+1;
+      let state = raw ? JSON.parse(raw) : null;
+      const items=[];
+      const used = new Set();
+      let changed = false;
+
+      if(!state || !Array.isArray(state.items)) state = { day: key, items: [] };
+
+      for(let i=0;i<5;i++){
+        const existing = state.items[i];
+        if(existing && existing.expiresAt && new Date(existing.expiresAt) > now){
+          items.push(existing);
+          used.add(existing.customer?.name);
+        } else {
+          const seed = hashString(`${key}-${i}-${Date.now()}`);
+          const r = rng(seed);
+          const tasks = monthTasks[monthIndex];
+          const task = pick(tasks, r);
+          const rule = taskRule(task);
+          const pool = shuffle(machinePoolFor(rule.set), r);
+          const machineCount = rule.set === 'harvest' ? 3 : rule.set === 'soil' || rule.set === 'sowing' ? 2 : 2;
+          const machines = pool.slice(0, machineCount);
+
+          let candidates = shuffle(customers, r).filter(c => !used.has(c.name));
+          const first = candidates[0] || pick(customers, r);
+          used.add(first.name);
+
+          const near = customerNear(first.location.includes('Celle') ? 'Celle' : first.location.includes('Wolfsburg') ? 'Wolfsburg' : first.location.includes('Gifhorn') ? 'Gifhorn' : '', first.lat, first.lon);
+          const workBase = near.find(c => c.name === first.name) || first;
+
+          const durationMinutes = durationFor(rule, r);
+          const startBase = 8 * 60 + Math.floor(r()*360); // between 08:00 and 14:00
+          const durationMax = Math.min(240, Math.max(60, durationMinutes));
+          const startMinutes = Math.min(startBase, 18*60 - durationMax - 10);
+          const startedAt = new Date(now);
+          startedAt.setHours(0,0,0,0);
+          startedAt.setMinutes(startMinutes);
+          const expiresAt = new Date(startedAt.getTime() + durationMax * 60000);
+          const elapsed = Math.max(0, now - startedAt) / 60000;
+          const remain = Math.max(0, durationMax - elapsed);
+          const crew = rule.team[0] + Math.floor(r() * (rule.team[1] - rule.team[0] + 1));
+          const workOffset = offsetCoord(workBase.lat, workBase.lon, r);
+          const customerOffset = offsetCoord(workBase.lat, workBase.lon, rng(seed + 99));
+
+          items.push({
+            id:`slot-${i}`,
+            customer:workBase,
+            task,
+            badge:rule.badge,
+            set:rule.set,
+            machines,
+            crew,
+            startedAt:startedAt.toISOString(),
+            expiresAt:expiresAt.toISOString(),
+            durationMinutes:durationMax,
+            remainingMinutes:remain,
+            work:{lat:workOffset.lat, lon:workOffset.lon, label:'am selben Tag'},
+            customerPoint:{lat:customerOffset.lat, lon:customerOffset.lon}
+          });
+          changed = true;
+        }
+      }
+
+      const out = { day:key, items };
+      if(changed || JSON.stringify(state.items||[]) !== JSON.stringify(items)) safeSet(key, JSON.stringify(out));
+      return out;
+    }
+
+    let currentMaps=[];
+    function clearMaps(){currentMaps.forEach(m=>{try{m.remove()}catch(e){}});currentMaps=[]}
+    function markerIcon(cls){return L.divIcon({className:'',html:`<div class="marker ${cls} ${cls==='work' ? 'big' : ''}"></div>`,iconSize:[18,18],iconAnchor:[9,9]})}
+    function renderMap(mapId,item){
+      const m=L.map(mapId,{zoomControl:true,scrollWheelZoom:false,attributionControl:true});currentMaps.push(m);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'&copy; OpenStreetMap-Mitwirkende'}).addTo(m);
+      const midLat=(item.customer.lat+item.work.lat)/2, midLon=(item.customer.lon+item.work.lon)/2;
+      m.setView([midLat,midLon],13);
+      const a=L.marker([item.customer.lat,item.customer.lon],{icon:markerIcon('customer')}).addTo(m).bindPopup(`<strong>Kunde</strong><br>${item.customer.name}<br>${item.customer.location}`);
+      const b=L.marker([item.work.lat,item.work.lon],{icon:markerIcon('work')}).addTo(m).bindPopup(`<strong>Einsatz</strong><br>${item.task}`);
+      L.polyline([[item.customer.lat,item.customer.lon],[item.work.lat,item.work.lon]],{color:'#d9bd74',weight:3,opacity:.85,dashArray:'6,8'}).addTo(m);
+      m.fitBounds(L.latLngBounds([a.getLatLng(), b.getLatLng()]).pad(0.7));
+    }
+    function renderOverviewMap(items){
+      const m=L.map('overviewMap',{zoomControl:true,scrollWheelZoom:false,attributionControl:true});currentMaps.push(m);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'&copy; OpenStreetMap-Mitwirkende'}).addTo(m);
+      const pts=[];
+      items.forEach(item=>{
+        pts.push([item.customer.lat,item.customer.lon],[item.work.lat,item.work.lon]);
+        L.marker([item.customer.lat,item.customer.lon],{icon:markerIcon('customer')}).addTo(m);
+        L.marker([item.work.lat,item.work.lon],{icon:markerIcon('work')}).addTo(m);
+      });
+      if(pts.length){m.fitBounds(pts,{padding:[28,28]})} else {m.setView([52.4,10.4],9)}
+    }
+
+    function render(){
+      clearMaps();
+      const now = new Date();
+      const state = generateDayPlan();
+      const remaining = state.items.map(i=>Math.max(0,(new Date(i.expiresAt)-now)/60000));
+      const totalCrew = state.items.reduce((a,i)=>a+i.crew,0);
+      const remainingHours = remaining.reduce((a,b)=>a+b,0)/60;
+      const nextEnd = state.items.map(i=>new Date(i.expiresAt)).sort((a,b)=>a-b)[0];
+      const firstStart = state.items.map(i=>new Date(i.startedAt)).sort((a,b)=>a-b)[0];
+
+      document.getElementById('summaryGrid').innerHTML = `
+        <div class="metric"><strong>${state.items.length}</strong><span>Einsätze heute</span></div>
+        <div class="metric"><strong>${totalCrew}</strong><span>Personen</span></div>
+        <div class="metric"><strong>${remainingHours.toFixed(1)} h</strong><span>Restzeit</span></div>
+      `;
+      document.getElementById('summaryNote').textContent = `Erster Start heute um ${fmtTime(firstStart)} Uhr, letzter Abschluss voraussichtlich um ${fmtTime(nextEnd)} Uhr. Alles bleibt auf denselben Tag begrenzt.`;
+      document.getElementById('monthHint').textContent = `${monthNames[now.getMonth()]} ${now.getFullYear()} • ${now.toLocaleDateString('de-DE')}`;
+      document.getElementById('footerDate').textContent = `Zuletzt aktualisiert: ${formatDateTime(now)}`;
+      document.getElementById('liveHint').textContent = 'Wenn ein Einsatz abläuft, wird er automatisch durch eine neue Tagesarbeit ersetzt.';
+      document.getElementById('cards').innerHTML = state.items.map((item,idx)=>{
+        const started = new Date(item.startedAt);
+        const expires = new Date(item.expiresAt);
+        const remain = Math.max(0,(expires-now)/60000);
+        return `
+          <article class="work-card">
+            <div class="topline">
+              <div>
+                <div class="badge ${idx%2 ? 'brown' : ''}">${item.badge}</div>
+                <div style="height:9px"></div>
+                <div class="customer">${item.customer.name}</div>
+                <div class="location">${item.customer.location} • ${item.customer.type}</div>
+              </div>
+              <div class="badge">Heute #${idx+1}</div>
+            </div>
+            <p class="job">${item.task}</p>
+            <div class="meta">
+              <div class="row"><div class="k">Arbeitsort</div><div class="v">${item.customer.location}</div></div>
+              <div class="row"><div class="k">Arbeitsbeginn</div><div class="v">${fmtTime(started)} Uhr</div></div>
+              <div class="row"><div class="k">Ende / Restzeit</div><div class="v">ca. ${fmtTime(expires)} Uhr • noch ${minutesText(remain)}</div></div>
+              <div class="row"><div class="k">Dauer</div><div class="v">${minutesText(item.durationMinutes)} am selben Tag</div></div>
+              <div class="row"><div class="k">Personal</div><div class="v">${item.crew} Personen</div></div>
+              <div class="row"><div class="k">Maschinen</div><div class="v"><div class="machines">${item.machines.map(m=>`<span class="machine">${m}</span>`).join('')}</div></div></div>
+            </div>
+            <div class="map-wrap">
+              <div class="map-caption"><strong>Kartenausschnitt</strong><span>${item.customer.location}</span></div>
+              <div class="mini-map" id="map-${idx}"></div>
+            </div>
+          </article>
+        `;
+      }).join('');
+      state.items.forEach((item,idx)=>renderMap(`map-${idx}`, item));
+      renderOverviewMap(state.items);
+      safeSet(monthKey(now), JSON.stringify(state));
+    }
+
+    render();
+    setInterval(render, 60000);
+    window.addEventListener('resize', () => { /* layout is responsive, maps rerender on interval */ });
+  </script></body>
+</html>
