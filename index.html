@@ -163,13 +163,12 @@
             <div>
               <div class="eyebrow"><span class="dot"></span>Agrarservice Oilmill • Heute im Einsatz</div>
               <h1>Stark auf dem Feld. Klar auf dem Handy.</h1>
-              <p class="sub">Die Seite zeigt nur Arbeiten, die am selben Tag erledigt werden. Jede Tour läuft nur wenige Stunden, wird live gespeichert und ersetzt sich automatisch, sobald sie fertig ist. So bleibt die öffentliche Übersicht immer frisch und realistisch.</p>
+              <p class="sub">Die Seite zeigt Arbeiten, die gerade durch Hof Oilmill bei unseren Kunden erledigt werden. Unsere Aufträge dauern typischerweise nur wenige Stunden, werden live gespeichert und aktualisieren sich, sobald sie fertig sind. So bleibt die öffentliche Übersicht immer frisch.</p>
               <div class="chips">
-                <span class="chip">Tagesarbeiten statt Dauereinsätze</span>
+                <span class="chip">Tagesarbeiten</span>
                 <span class="chip">Mobil optimiert</span>
-                <span class="chip">Echte Karte mit Markern</span>
-                <span class="chip">Live-Verfügbarkeit</span>
-                <span class="chip">Automatisch gespeichert</span>
+                <span class="chip">Echte Live-Karte</span>
+                <span class="chip">automatisiert</span>
               </div>
             </div>
           </div>
@@ -199,7 +198,7 @@
     </section><div class="toolbar">
   <div class="section-title">
     <h2>Hier sind wir aktiv</h2>
-    <p>Fünf aktuelle Arbeiten, kurze Laufzeiten, echte Karten und passende Maschinen.</p>
+    <p>Kurze Arbeitszeiten dank moderner Maschinen und erfahrenem Personal.</p>
   </div>
 </div>
 
@@ -217,11 +216,11 @@
 
   <aside class="side side-stack">
     <div class="card side-card">
-      <h3>Warum die Seite interessant ist</h3>
+      <h3>Warum Oilmill für Sie interessant ist</h3>
       <div class="highlights">
-        <div class="highlight"><strong>Live-Tagesmodus</strong><span>Jeder Einsatz startet und endet am selben Tag. Abgelaufene Einträge werden ohne manuelles Zutun ersetzt.</span></div>
-        <div class="highlight"><strong>Technik sichtbar gemacht</strong><span>Zu jeder Arbeit erscheinen passende Maschinen aus dem Fuhrpark mit realistischem Einsatzbezug.</span></div>
-        <div class="highlight"><strong>Regionale Nähe</strong><span>Karte, Kundenort und Einsatzpunkt liegen eng beieinander, damit man sofort erkennt, wo gearbeitet wird.</span></div>
+        <div class="highlight"><strong>Schlagkraft & Technik</strong><span>Wir minimieren Ihre Ausfallzeiten und bringen Ihre Ernte sicher und effizient ein.</span></div>
+        <div class="highlight"><strong>Entlastung & Wirtschaftlichkeit</strong><span>Sparen Sie sich die hohen Anschaffungskosten für Spezialmaschinen. Wir übernehmen die Arbeit professionell, kostentransparent und termingerecht für Sie.</span></div>
+        <div class="highlight"><strong>Erfahrung & Präzision</strong><span>Mit jahrelanger Erfahrung und GPS-gestützter Technik holen wir das Optimum aus Ihren Flächen heraus. Zuverlässigkeit, die man auf dem Feld sieht.</span></div>
       </div>
     </div>
 
@@ -415,7 +414,7 @@
             expiresAt:expiresAt.toISOString(),
             durationMinutes:durationMax,
             remainingMinutes:remain,
-            work:{lat:workOffset.lat, lon:workOffset.lon, label:'am selben Tag'},
+            work:{lat:workOffset.lat, lon:workOffset.lon, label:'(geschätzt)'},
             customerPoint:{lat:customerOffset.lat, lon:customerOffset.lon}
           });
           changed = true;
@@ -467,10 +466,10 @@
         <div class="metric"><strong>${totalCrew}</strong><span>Personen</span></div>
         <div class="metric"><strong>${remainingHours.toFixed(1)} h</strong><span>Restzeit</span></div>
       `;
-      document.getElementById('summaryNote').textContent = `Erster Start heute um ${fmtTime(firstStart)} Uhr, letzter Abschluss voraussichtlich um ${fmtTime(nextEnd)} Uhr. Alles bleibt auf denselben Tag begrenzt.`;
+      document.getElementById('summaryNote').textContent = `Längster Auftrag aktiv seit ${fmtTime(firstStart)} Uhr, nächster Auftragsabschluss voraussichtlich um ${fmtTime(nextEnd)} Uhr.`;
       document.getElementById('monthHint').textContent = `${monthNames[now.getMonth()]} ${now.getFullYear()} • ${now.toLocaleDateString('de-DE')}`;
       document.getElementById('footerDate').textContent = `Zuletzt aktualisiert: ${formatDateTime(now)}`;
-      document.getElementById('liveHint').textContent = 'Wenn ein Einsatz abläuft, wird er automatisch durch eine neue Tagesarbeit ersetzt.';
+      document.getElementById('liveHint').textContent = 'Wenn ein Einsatz abläuft, wird automatisch aktualisiert.';
       document.getElementById('cards').innerHTML = state.items.map((item,idx)=>{
         const started = new Date(item.startedAt);
         const expires = new Date(item.expiresAt);
@@ -484,14 +483,14 @@
                 <div class="customer">${item.customer.name}</div>
                 <div class="location">${item.customer.location} • ${item.customer.type}</div>
               </div>
-              <div class="badge">Heute #${idx+1}</div>
+              <div class="badge">Kunde #${idx+1}</div>
             </div>
             <p class="job">${item.task}</p>
             <div class="meta">
               <div class="row"><div class="k">Arbeitsort</div><div class="v">${item.customer.location}</div></div>
               <div class="row"><div class="k">Arbeitsbeginn</div><div class="v">${fmtTime(started)} Uhr</div></div>
               <div class="row"><div class="k">Ende / Restzeit</div><div class="v">ca. ${fmtTime(expires)} Uhr • noch ${minutesText(remain)}</div></div>
-              <div class="row"><div class="k">Dauer</div><div class="v">${minutesText(item.durationMinutes)} am selben Tag</div></div>
+              <div class="row"><div class="k">Dauer</div><div class="v">${minutesText(item.durationMinutes)} (geschätzt)</div></div>
               <div class="row"><div class="k">Personal</div><div class="v">${item.crew} Personen</div></div>
               <div class="row"><div class="k">Maschinen</div><div class="v"><div class="machines">${item.machines.map(m=>`<span class="machine">${m}</span>`).join('')}</div></div></div>
             </div>
